@@ -80,6 +80,20 @@ private fun AppRoot() {
         granted = result.values.any { it }
     }
 
+    // Ask for notification permission (Android 13+) so the playback notification
+    // and lock-screen controls can appear while the screen is off.
+    val notifLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+    LaunchedEffect(granted) {
+        if (granted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     LaunchedEffect(granted, selected) {
         if (granted && selected == null) {
             videos = repo.loadVideos()
